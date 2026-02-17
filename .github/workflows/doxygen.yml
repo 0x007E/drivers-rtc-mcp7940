@@ -1,0 +1,144 @@
+name: Doxygen Deployment
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+env:
+  DOXYGEN_VERSION: 1.16.1
+  DOXYGEN_CONFIG: "doxygen.config"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository for deployment
+        uses: actions/checkout@v5
+
+      - name: Checkout shared-format repository
+        uses: actions/checkout@v5
+        with:
+          repository: 0x007E/shared-format
+          path: shared-format
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout shared-return repository
+        uses: actions/checkout@v5
+        with:
+          repository: 0x007E/shared-return
+          path: shared-return
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout hal-common repository
+        uses: actions/checkout@v5
+        with:
+          repository: 0x007E/hal-common
+          path: hal-common
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Checkout hal-avr0-twi repository
+        uses: actions/checkout@v5
+        with:
+          repository: 0x007E/hal-avr0-twi
+          path: hal-avr0-twi
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout utils-macros repository
+        uses: actions/checkout@v5
+        with:
+          repository: 0x007E/utils-macros
+          path: utils-macros
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout util-systick repository
+        uses: actions/checkout@v5
+        with:
+          repository: 0x007E/utils-systick
+          path: utils-systick
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout util-time repository
+        uses: actions/checkout@v5
+        with:
+          repository: 0x007E/utils-time
+          path: utils-time
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare files for Doxygen
+        run: |
+          mkdir -p ./structure/shared/format
+          cp -r ./shared-format/time.h ./structure/shared/format/
+
+          mkdir -p ./structure/shared/return
+          cp -r ./shared-return/status.h ./structure/shared/return/
+
+          mkdir -p ./structure/hal/common
+          mkdir -p ./structure/hal/common/defines
+          mkdir -p ./structure/hal/common/enums
+          cp -r ./hal-common/defines/TWI_defines.h ./structure/hal/common/defines/
+          cp -r ./hal-common/enums/TWI_enums.h ./structure/hal/common/enums/
+
+          mkdir -p ./structure/hal/avr0/twi
+          cp -r ./hal-avr0-twi/twi.c ./structure/hal/avr0/twi/
+          cp -r ./hal-avr0-twi/twi.h ./structure/hal/avr0/twi/
+
+          mkdir -p ./structure/utils/macros
+          cp -r ./utils-macros/stringify.h ./structure/utils/macros/
+
+          mkdir -p ./structure/utils/systick
+          cp -r ./utils-systick/systick.c ./structure/utils/systick/
+          cp -r ./utils-systick/systick.h ./structure/utils/systick/
+
+          mkdir -p ./structure/utils/time
+          cp -r ./utils-time/validate.c ./structure/utils/time/
+          cp -r ./utils-time/validate.h ./structure/utils/time/
+
+          mkdir -p ./structure/drivers/rtc/mcp7940
+          cp ./mcp7940.c ./structure/drivers/rtc/mcp7940/
+          cp ./mcp7940.h ./structure/drivers/rtc/mcp7940/
+      
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Install Doxygen
+        run: |
+          mkdir -p ./install
+          wget https://www.doxygen.nl/files/doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz
+          tar -xf doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz -C ./install
+          sudo apt-get update && sudo apt-get install -y graphviz
+
+      - name: Build Doxygen docs
+        run: ./install/doxygen-${{ env.DOXYGEN_VERSION }}/bin/doxygen ./${{ env.DOXYGEN_CONFIG }}
+        
+      - name: Copy Doxygen output
+        run: |
+          mkdir -p ./_site
+          cp -r ./html/* ./_site/
+
+      - name: Upload artifact for deployment
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./_site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
