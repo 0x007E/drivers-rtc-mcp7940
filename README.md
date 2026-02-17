@@ -2,6 +2,8 @@
 
 # `MCP7940 RTC Driver`
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/0x007E/drivers-rtc-mcp7940)
+
 This hardware abstracted driver can be used to interact with an [MCP7940](#additional-information) over `TWI`/`I2C`. The hardware layer is fully abstract an can be switched between different plattforms. The `TWI`/`I2C` library has to impelement the [twi.h](https://0x007e.github.io/drivers-rtc-mcp7940/twi_8c.html)-header used in this repository.
 
 ## File Structure
