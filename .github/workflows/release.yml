@@ -1,0 +1,157 @@
+name: Release Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  OUTPUT_FOLDER: "./output"
+  FILENAME: "library"
+
+jobs:
+  pack-library:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository for deployment
+        uses: actions/checkout@v5
+
+      - name: Checkout shared-format repository
+        uses: actions/checkout@v5
+        with:
+          repository: 0x007E/shared-format
+          path: shared-format
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout shared-return repository
+        uses: actions/checkout@v5
+        with:
+          repository: 0x007E/shared-return
+          path: shared-return
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout hal-common repository
+        uses: actions/checkout@v5
+        with:
+          repository: 0x007E/hal-common
+          path: hal-common
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Checkout hal-avr0-twi repository
+        uses: actions/checkout@v5
+        with:
+          repository: 0x007E/hal-avr0-twi
+          path: hal-avr0-twi
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout utils-macros repository
+        uses: actions/checkout@v5
+        with:
+          repository: 0x007E/utils-macros
+          path: utils-macros
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout utils-systick repository
+        uses: actions/checkout@v5
+        with:
+          repository: 0x007E/utils-systick
+          path: utils-systick
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout utils-time repository
+        uses: actions/checkout@v5
+        with:
+          repository: 0x007E/utils-time
+          path: utils-time
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare library package
+        run: |
+          mkdir -p ./${{ env.OUTPUT_FOLDER }}/shared/format
+          cp -r ./shared-format/time.h ./${{ env.OUTPUT_FOLDER }}/shared/format/
+
+          mkdir -p ./${{ env.OUTPUT_FOLDER }}/shared/return
+          cp -r ./shared-return/status.h ./${{ env.OUTPUT_FOLDER }}/shared/return/
+
+          mkdir -p ./${{ env.OUTPUT_FOLDER }}/hal/common
+          mkdir -p ./${{ env.OUTPUT_FOLDER }}/hal/common/defines
+          mkdir -p ./${{ env.OUTPUT_FOLDER }}/hal/common/enums
+          cp -r ./hal-common/defines/TWI_defines.h ./${{ env.OUTPUT_FOLDER }}/hal/common/defines/
+          cp -r ./hal-common/enums/TWI_enums.h ./${{ env.OUTPUT_FOLDER }}/hal/common/enums/
+
+          mkdir -p ./${{ env.OUTPUT_FOLDER }}/hal/avr0/twi
+          cp -r ./hal-avr0-twi/twi.c ./${{ env.OUTPUT_FOLDER }}/hal/avr0/twi/
+          cp -r ./hal-avr0-twi/twi.h ./${{ env.OUTPUT_FOLDER }}/hal/avr0/twi/
+
+          mkdir -p ./${{ env.OUTPUT_FOLDER }}/utils/macros
+          cp -r ./utils-macros/stringify.h ./${{ env.OUTPUT_FOLDER }}/utils/macros/
+
+          mkdir -p ./${{ env.OUTPUT_FOLDER }}/utils/systick
+          cp -r ./utils-systick/systick.c ./${{ env.OUTPUT_FOLDER }}/utils/systick/
+          cp -r ./utils-systick/systick.h ./${{ env.OUTPUT_FOLDER }}/utils/systick/
+
+          mkdir -p ./${{ env.OUTPUT_FOLDER }}/utils/time
+          cp -r ./utils-time/validate.c ./${{ env.OUTPUT_FOLDER }}/utils/time/
+          cp -r ./utils-time/validate.h ./${{ env.OUTPUT_FOLDER }}/utils/time/
+          
+          mkdir -p ./${{ env.OUTPUT_FOLDER }}/drivers/rtc/mcp7940
+          cp ./mcp7940.c ./${{ env.OUTPUT_FOLDER }}/drivers/rtc/mcp7940/
+          cp ./mcp7940.h ./${{ env.OUTPUT_FOLDER }}/drivers/rtc/mcp7940/
+
+      - name: Upload library package
+        uses: actions/upload-artifact@v4
+        with:
+            name: library-package
+            path: ${{ env.OUTPUT_FOLDER }}
+            retention-days: 1
+
+  create-release:
+    needs: [pack-library]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: |
+            Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+
+    - name: Download Library Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: library-package
+        path: ./artifact/${{ env.FILENAME }}
+    - name: Display structure
+      run: ls -R ./artifact/${{ env.FILENAME }}
+    - name: Create Compressed File
+      run: |
+        cd ./artifact
+        tar -czvf ./${{ env.FILENAME }}.tar.gz ./${{ env.FILENAME }}
+        zip -r ./${{ env.FILENAME }}.zip ./${{ env.FILENAME }}
+        cd ..
+    
+    - name: Upload Build Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./artifact/${{ env.FILENAME }}.tar.gz
+        asset_name: ${{ env.FILENAME }}.tar.gz
+        asset_content_type: application/gzip
+    
+    - name: Upload Build Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./artifact/${{ env.FILENAME }}.zip
+        asset_name: ${{ env.FILENAME }}.zip
+        asset_content_type: application/zip
