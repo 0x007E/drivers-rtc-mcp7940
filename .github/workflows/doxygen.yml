@@ -26,18 +26,18 @@ jobs:
       - name: Checkout repository for deployment
         uses: actions/checkout@v5
 
-      - name: Checkout shared-format repository
+      - name: Checkout core_types-format repository
         uses: actions/checkout@v5
         with:
-          repository: 0x007E/shared-format
-          path: shared-format
+          repository: 0x007E/core_types-format
+          path: core_types-format
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Checkout shared-return repository
+      - name: Checkout core_types-return repository
         uses: actions/checkout@v5
         with:
-          repository: 0x007E/shared-return
-          path: shared-return
+          repository: 0x007E/core_types-return
+          path: core_types-return
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout hal-common repository
@@ -77,11 +77,11 @@ jobs:
 
       - name: Prepare files for Doxygen
         run: |
-          mkdir -p ./structure/shared/format
-          cp -r ./shared-format/time.h ./structure/shared/format/
+          mkdir -p ./structure/core_types/format
+          cp -r ./core_types-format/time.h ./structure/core_types/format/
 
-          mkdir -p ./structure/shared/return
-          cp -r ./shared-return/status.h ./structure/shared/return/
+          mkdir -p ./structure/core_types/return
+          cp -r ./core_types-return/status.h ./structure/core_types/return/
 
           mkdir -p ./structure/hal/common
           mkdir -p ./structure/hal/common/defines

@@ -18,18 +18,18 @@ jobs:
       - name: Checkout repository for deployment
         uses: actions/checkout@v5
 
-      - name: Checkout shared-format repository
+      - name: Checkout core_types-format repository
         uses: actions/checkout@v5
         with:
-          repository: 0x007E/shared-format
-          path: shared-format
+          repository: 0x007E/core_types-format
+          path: core_types-format
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Checkout shared-return repository
+      - name: Checkout core_types-return repository
         uses: actions/checkout@v5
         with:
-          repository: 0x007E/shared-return
-          path: shared-return
+          repository: 0x007E/core_types-return
+          path: core_types-return
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout hal-common repository
@@ -69,11 +69,11 @@ jobs:
 
       - name: Prepare library package
         run: |
-          mkdir -p ./${{ env.OUTPUT_FOLDER }}/shared/format
-          cp -r ./shared-format/time.h ./${{ env.OUTPUT_FOLDER }}/shared/format/
+          mkdir -p ./${{ env.OUTPUT_FOLDER }}/core_types/format
+          cp -r ./core_types-format/time.h ./${{ env.OUTPUT_FOLDER }}/core_types/format/
 
-          mkdir -p ./${{ env.OUTPUT_FOLDER }}/shared/return
-          cp -r ./shared-return/status.h ./${{ env.OUTPUT_FOLDER }}/shared/return/
+          mkdir -p ./${{ env.OUTPUT_FOLDER }}/core_types/return
+          cp -r ./core_types-return/status.h ./${{ env.OUTPUT_FOLDER }}/core_types/return/
 
           mkdir -p ./${{ env.OUTPUT_FOLDER }}/hal/common
           mkdir -p ./${{ env.OUTPUT_FOLDER }}/hal/common/defines
