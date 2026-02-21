@@ -583,7 +583,7 @@
         #define MCP7940_PWRUPMTH 0x1F
     #endif
 
-    #include "../../../shared/format/time.h"
+    #include "../../../core_types/format/time.h"
 
     #include "../../../utils/systick/systick.h"
     #include "../../../utils/time/validate.h"
