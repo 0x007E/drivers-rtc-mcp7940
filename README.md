@@ -28,7 +28,7 @@ hal/
         ├── twi.c
         └── twi.h
 
-shared/
+core_types/
 ├── format/
 |   └── time.h
 └── return/
@@ -55,11 +55,11 @@ The library can be downloaded (`zip` or `tar`), cloned or used as submodule in a
 ### Using with `git clone`
 
 ```sh
-mkdir -p ./shared/
-git clone https://github.com/0x007E/shared-format.git ./shared
-mv ./shared/shared-format ./shared/format
-git clone https://github.com/0x007E/shared-return.git ./shared
-mv ./shared/shared-return ./shared/return
+mkdir -p ./core_types/
+git clone https://github.com/0x007E/core_types-format.git ./core_types
+mv ./core_types/core_types-format ./core_types/format
+git clone https://github.com/0x007E/core_types-return.git ./core_types
+mv ./core_types/core_types-return ./core_types/return
 
 mkdir -p ./drivers/rtc/
 git clone https://github.com/0x007E/drivers-rtc-mcp7940.git ./drivers/rtc
@@ -88,8 +88,8 @@ mv ./utils/utils-time    ./utils/time
 ### Using as `git submodule`
 
 ```sh
-git submodule add https://github.com/0x007E/shared-format.git         shared/format
-git submodule add https://github.com/0x007E/shared-return.git         shared/return
+git submodule add https://github.com/0x007E/core_types-format.git         core_types/format
+git submodule add https://github.com/0x007E/core_types-return.git         core_types/return
 
 git submodule add https://github.com/0x007E/drivers-rtc-mcp7940.git   drivers/rtc/mcp7940
 git submodule add https://github.com/0x007E/hal-common.git            hal/common
