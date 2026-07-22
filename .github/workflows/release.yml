@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 env:
-  OUTPUT_FOLDER: "./output"
+  OUTPUT_FOLDER: "output"
   FILENAME: "library"
 
 jobs:
@@ -14,52 +14,52 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository for deployment
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Checkout core_types-format repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: 0x007E/core_types-format
           path: core_types-format
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout core_types-return repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: 0x007E/core_types-return
           path: core_types-return
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout hal-common repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: 0x007E/hal-common
           path: hal-common
           token: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Checkout hal-avr0-twi repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: 0x007E/hal-avr0-twi
           path: hal-avr0-twi
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout utils-macros repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: 0x007E/utils-macros
           path: utils-macros
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout utils-systick repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: 0x007E/utils-systick
           path: utils-systick
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout utils-time repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: 0x007E/utils-time
           path: utils-time
@@ -95,63 +95,58 @@ jobs:
           cp -r ./utils-time/validate.h ./${{ env.OUTPUT_FOLDER }}/utils/time/
           
           mkdir -p ./${{ env.OUTPUT_FOLDER }}/drivers/rtc/mcp7940
-          cp ./mcp7940.c ./${{ env.OUTPUT_FOLDER }}/drivers/rtc/mcp7940/
-          cp ./mcp7940.h ./${{ env.OUTPUT_FOLDER }}/drivers/rtc/mcp7940/
+          cp -r ./mcp7940.c ./${{ env.OUTPUT_FOLDER }}/drivers/rtc/mcp7940/
+          cp -r ./mcp7940.h ./${{ env.OUTPUT_FOLDER }}/drivers/rtc/mcp7940/
+
+          cp -r ./LICENSE ./${{ env.OUTPUT_FOLDER }}/
 
       - name: Upload library package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
             name: library-package
-            path: ${{ env.OUTPUT_FOLDER }}
+            path: ./${{ env.OUTPUT_FOLDER }}
             retention-days: 1
 
   create-release:
     needs: [pack-library]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
     steps:
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        body: |
-            Release ${{ github.ref }}
-        draft: false
-        prerelease: false
+      - name: Create Release
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            --title "Release ${{ github.ref_name }}" \
+            --notes "Release ${{ github.ref_name }}"
 
-    - name: Download Library Artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: library-package
-        path: ./artifact/${{ env.FILENAME }}
-    - name: Display structure
-      run: ls -R ./artifact/${{ env.FILENAME }}
-    - name: Create Compressed File
-      run: |
-        cd ./artifact
-        tar -czvf ./${{ env.FILENAME }}.tar.gz ./${{ env.FILENAME }}
-        zip -r ./${{ env.FILENAME }}.zip ./${{ env.FILENAME }}
-        cd ..
+      - name: Download Library Artifacts
+        uses: actions/download-artifact@v8
+        with:
+            name: library-package
+            path: ./artifact/${{ env.FILENAME }}
     
-    - name: Upload Build Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./artifact/${{ env.FILENAME }}.tar.gz
-        asset_name: ${{ env.FILENAME }}.tar.gz
-        asset_content_type: application/gzip
+      - name: Display structure
+        run: ls -R ./artifact/${{ env.FILENAME }}
     
-    - name: Upload Build Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./artifact/${{ env.FILENAME }}.zip
-        asset_name: ${{ env.FILENAME }}.zip
-        asset_content_type: application/zip
+      - name: Create Compressed File
+        run: |
+            cd ./artifact
+            tar -czvf ./${{ env.FILENAME }}.tar.gz ./${{ env.FILENAME }}
+            zip -r ./${{ env.FILENAME }}.zip ./${{ env.FILENAME }}
+            cd ..
+
+      - name: Upload files
+        run: |
+          gh release upload ${{ github.ref_name }} \
+            ./artifact/${{ env.FILENAME }}.tar.gz \
+            ./artifact/${{ env.FILENAME }}.zip
+      
+      - name: Rollback release on failure
+        if: failure()
+        run: |
+          gh release delete "${{ github.ref_name }}" -y --cleanup-tag
+          git push --delete origin "${{ github.ref_name }}" || true

@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  DOXYGEN_VERSION: 1.16.1
+  DOXYGEN_VERSION: 1.17.0
   DOXYGEN_CONFIG: "doxygen.config"
 
 jobs:
@@ -24,52 +24,52 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository for deployment
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Checkout core_types-format repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: 0x007E/core_types-format
           path: core_types-format
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout core_types-return repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: 0x007E/core_types-return
           path: core_types-return
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout hal-common repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: 0x007E/hal-common
           path: hal-common
           token: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Checkout hal-avr0-twi repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: 0x007E/hal-avr0-twi
           path: hal-avr0-twi
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout utils-macros repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: 0x007E/utils-macros
           path: utils-macros
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout util-systick repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: 0x007E/utils-systick
           path: utils-systick
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout util-time repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: 0x007E/utils-time
           path: utils-time
@@ -105,12 +105,12 @@ jobs:
           cp -r ./utils-time/validate.h ./structure/utils/time/
 
           mkdir -p ./structure/drivers/rtc/mcp7940
-          cp ./mcp7940.c ./structure/drivers/rtc/mcp7940/
-          cp ./mcp7940.h ./structure/drivers/rtc/mcp7940/
+          cp -r ./mcp7940.c ./structure/drivers/rtc/mcp7940/
+          cp -r ./mcp7940.h ./structure/drivers/rtc/mcp7940/
       
       - name: Setup Pages
         id: pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Install Doxygen
         run: |
@@ -128,7 +128,7 @@ jobs:
           cp -r ./html/* ./_site/
 
       - name: Upload artifact for deployment
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: ./_site
 
@@ -141,4 +141,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

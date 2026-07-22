@@ -9,59 +9,59 @@ on:
     - main
 
 env:
-  OUTPUT_FOLDER: "./output"
+  OUTPUT_FOLDER: "output"
   
 jobs:
   pack-library:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository for deployment
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Checkout core_types-format repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: 0x007E/core_types-format
           path: core_types-format
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout core_types-return repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: 0x007E/core_types-return
           path: core_types-return
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout hal-common repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: 0x007E/hal-common
           path: hal-common
           token: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Checkout hal-avr0-twi repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: 0x007E/hal-avr0-twi
           path: hal-avr0-twi
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout utils-macros repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: 0x007E/utils-macros
           path: utils-macros
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout utils-systick repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: 0x007E/utils-systick
           path: utils-systick
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Checkout utils-timerepository
-        uses: actions/checkout@v5
+      - name: Checkout utils-time repository
+        uses: actions/checkout@v7
         with:
           repository: 0x007E/utils-time
           path: utils-time
@@ -97,17 +97,12 @@ jobs:
           cp -r ./utils-time/validate.h ./${{ env.OUTPUT_FOLDER }}/utils/time/
           
           mkdir -p ./${{ env.OUTPUT_FOLDER }}/drivers/rtc/mcp7940
-          cp ./mcp7940.c ./${{ env.OUTPUT_FOLDER }}/drivers/rtc/mcp7940/
-          cp ./mcp7940.h ./${{ env.OUTPUT_FOLDER }}/drivers/rtc/mcp7940/
- 
-      - name: Pack files for upload
-        run: |
-          tar -czvf build.tar.gz ${{ env.OUTPUT_FOLDER }}
-          zip -r build.zip ${{ env.OUTPUT_FOLDER }}
+          cp -r ./mcp7940.c ./${{ env.OUTPUT_FOLDER }}/drivers/rtc/mcp7940/
+          cp -r ./mcp7940.h ./${{ env.OUTPUT_FOLDER }}/drivers/rtc/mcp7940/
 
       - name: Upload library package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
             name: library-package
-            path: ${{ env.OUTPUT_FOLDER }}
+            path: ./${{ env.OUTPUT_FOLDER }}
             retention-days: 1
